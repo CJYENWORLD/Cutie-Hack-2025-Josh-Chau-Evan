@@ -14,16 +14,6 @@ int main()
     
     int good;
     good = reading.readFile(name);  
-    
-    if (good == 1)
-    {
-        cout << "fuck" << endl;
-    }
-    else
-    {
-        cout << "good read" << endl;
-        // reading.print();
-    }
 
     double maxTime = reading.getMaxTime();
     cout << "maxTime: " << maxTime << endl;
@@ -36,5 +26,5 @@ int main()
     cout << "accel at 3: " << reading.getAccel(3) << endl;
     cout << "lat and lon at 3: " << reading.getLat(3) << ", " << reading.getLon(3) << endl;
 
-    
+
 }
