@@ -5,13 +5,14 @@ using namespace std;
 
 class fileReader{
     public:
-        fileReader();
+        
         int readFile(string&);
-        double getMPH(int) const;
-        double getAccel(int) const;
-        double getLat(int) const; 
-        double getLon(int) const;
-        void print() const;
+        double getSpeed(double) const;
+        double getAccel(double) const;
+        double getLat(double) const; 
+        double getLon(double) const;
+        double getMaxTime() const;
+        void print();
     private:
-        vector<vector<double>> data;
+        vector<vector<double>> _data;
 };
