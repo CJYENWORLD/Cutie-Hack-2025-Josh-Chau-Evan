@@ -22,7 +22,7 @@ int main()
     else
     {
         cout << "good read" << endl;
-        reading.print();
+        // reading.print();
     }
 
     double maxTime = reading.getMaxTime();
@@ -35,4 +35,6 @@ int main()
     cout << "speed at 3: " << reading.getSpeed(3) << endl;
     cout << "accel at 3: " << reading.getAccel(3) << endl;
     cout << "lat and lon at 3: " << reading.getLat(3) << ", " << reading.getLon(3) << endl;
+
+    
 }
