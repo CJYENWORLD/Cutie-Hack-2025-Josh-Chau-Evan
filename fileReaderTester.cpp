@@ -1,3 +1,6 @@
+//Dont use in final product
+
+
 #include <iostream>
 using namespace std;
 
@@ -8,7 +11,7 @@ int main()
     fileReader reading;
     cout << "input filename" << endl;
     // string name;
-    string name = "drives/drive_1.csv";
+    string name = "drives/drive_1.csv"; 
     // cin >> name;
     cout << "filename: " << name << endl;
     
