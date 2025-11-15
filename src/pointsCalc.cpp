@@ -5,16 +5,15 @@ using namespace std;
 double multiplier = 1;
 int points = 0;
 int speedlimit = 40;
-double accel_delta = 2;
+// double accel_delta = 2;
 int streak;
 
 
-int totalPoints (int curr_second, double mph, double accel_data) {
+int totalPoints (int curr_second, double mph, double accel_delta) {
 
-int infraction_occured = 0;
+    int infraction_occured = 0;
 
     if (accel_delta > -2 && accel_delta < 2) {
-
         points += points ;
         streak += streak ;
     }
