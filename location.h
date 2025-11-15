@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 
 class Location {
@@ -13,4 +14,6 @@ public:
     double getLatitude() const;
     double getLongitude() const;
     int getSpeedLimit() const;
+    void setLatitude(double lat);
+    void setLongitude(double lon);
 };
