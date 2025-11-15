@@ -10,17 +10,19 @@ int main()
 {
     fileReader reading;
     cout << "input filename" << endl;
-    // string name;
-    string name = "drives/drive_1.csv"; 
-    // cin >> name;
+    string name;
+    // string name = "drives/drive_1.csv"; 
+    cin >> name;
     cout << "filename: " << name << endl;
     
     int good;
     good = reading.readFile(name);  
 
+    reading.print();
+
     double maxTime = reading.getMaxTime();
     cout << "maxTime: " << maxTime << endl;
-
+    
     cout << "speed at maxTime: " << reading.getSpeed(maxTime) << endl;
     cout << "accel at maxTime: " << reading.getAccel(maxTime) << endl;
     cout << "lat and lon at maxTime: " << reading.getLat(maxTime) << ", " << reading.getLon(maxTime) << endl;

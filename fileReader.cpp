@@ -9,6 +9,7 @@ using namespace std;
 
 int fileReader::readFile(string& fileName)
 {
+    _data.clear();
     ifstream inF;
     inF.open(fileName);
 
