@@ -73,7 +73,7 @@ double fileReader::getLon(double time) const
 
 double fileReader::getMaxTime() const
 {
-    return static_cast<double>(_data.size() - 1);
+    return static_cast<double>(_data.size());
 }
 
 void fileReader::print()

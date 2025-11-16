@@ -2,19 +2,19 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
+#include <sstream>
 #include "json.hpp"
 using json = nlohmann::json;
 
-
-App::App() {
-}
+App::App() {}
 
 void App::run() {
     double curPoints = 0.0;
     int goodStreak = 0;
     double multiplier = 1.0;
 
-    std::string path = "drives/street_drive_good.csv"; 
+    std::string path = "drives/street_drive_good.csv";
     reader.readFile(path);
 
     int speedLimit = -1;
@@ -23,22 +23,20 @@ void App::run() {
     if (loc.fetchSpeedLimit()) {
         speedLimit = loc.getSpeedLimit();
     } else {
-        // fallback so the logic still makes sense if API fails
-        speedLimit = 25; // or 40, your choice
+        speedLimit = 25;
     }
+
+    std::vector<std::string> currentDriveSummary;
 
     for (int i = 0; i < reader.getMaxTime(); i++) {
         double mph = reader.getSpeed(i);
         double accelDelta = reader.getAccel(i);
 
-        // 1) Accel rule: don't penalize accel when under the limit
         bool goodAccel = true;
         if (mph >= speedLimit) {
-            // only enforce accel range once you're at/above the limit
             goodAccel = (accelDelta > -3.5 && accelDelta < 3.5);
         }
 
-        // 2) Speed rule: same as before (too fast or way too slow is bad)
         bool goodSpeed = true;
         if (speedLimit > 0) {
             if (mph > (speedLimit + 5) || mph < (speedLimit / 2.0)) {
@@ -49,47 +47,78 @@ void App::run() {
         bool infraction = !(goodAccel && goodSpeed);
 
         if (infraction) {
-            // bad tick: small penalty and full reset
             curPoints -= 1.0;
             multiplier = 1.0;
             goodStreak = 0;
         } else {
-            // good tick: add 1 * multiplier
             curPoints += 1.0 * multiplier;
             goodStreak++;
-
-            // every 10 good ticks, boost multiplier by +0.5
             if (goodStreak % 10 == 0) {
                 multiplier += 0.5;
             }
         }
 
-        std::cout << "t=" << i
-                  << " points=" << curPoints
-                  << " mult=" << multiplier
-                  << " streak=" << goodStreak
-                  << " limit=" << speedLimit
-                  << " mph=" << mph
-                  << " accel=" << accelDelta
-                  << std::endl;
-        std::cout << "-----" << std::endl;
+        std::string status;
+        if (!infraction) {
+            status = "Eco Driving";
+        } else {
+            std::vector<std::string> reasons;
+
+            if (!goodSpeed) {
+                if (mph > speedLimit + 5) {
+                    reasons.push_back("Speeding (over limit + 5 mph)");
+                } else if (mph < speedLimit / 2.0) {
+                    reasons.push_back("Driving too slow (below half limit)");
+                }
+            }
+            if (!goodAccel) {
+                reasons.push_back("Harsh acceleration/braking");
+            }
+
+            if (reasons.empty()) {
+                status = "Driving rule violation";
+            } else if (reasons.size() == 1) {
+                status = reasons[0];
+            } else {
+                status = reasons[0] + " and " + reasons[1];
+            }
+        }
+
+        std::ostringstream oss;
+        oss << "t=" << i << "s"
+            << ", points=" << curPoints
+            << ", multiplier=" << multiplier
+            << ", " << status;
+
+        currentDriveSummary.push_back(oss.str());
+
+        std::cout << currentDriveSummary.back() << "\n-----\n";
     }
 
     std::cout << "Final points: " << curPoints << std::endl;
 
-    //write to points file
+    json cd;
+    cd["drive_1"] = currentDriveSummary;
+
+    std::ofstream driveFile("current_drive.json");
+    if (!driveFile.is_open()) {
+        std::cerr << "Failed to write current_drive.json\n";
+    } else {
+        driveFile << cd.dump(4);
+        driveFile.close();
+    }
+
     double totalPoints = 0.0;
     std::vector<double> drives;
 
     std::ifstream inFile("points.json");
     if (inFile.is_open() && inFile.peek() != std::ifstream::traits_type::eof()) {
-        // File exists and is not empty
         try {
             json j;
             inFile >> j;
-            totalPoints = j.value("totalPoints", 0.0);        // default 0
-            drives = j.value("drives", std::vector<double>()); // default empty
-        } catch (json::parse_error& e) {
+            totalPoints = j.value("totalPoints", 0.0);
+            drives = j.value("drives", std::vector<double>());
+        } catch (...) {
             std::cerr << "Failed to parse points.json, starting fresh.\n";
             totalPoints = 0.0;
             drives.clear();
@@ -106,11 +135,8 @@ void App::run() {
     std::ofstream outFile("points.json");
     if (!outFile.is_open()) {
         std::cerr << "Failed to write points.json\n";
-    }
-    else
-    {
-        outFile << j.dump(4); // pretty-print
+    } else {
+        outFile << j.dump(4);
         outFile.close();
     }
-
 }
