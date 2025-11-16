@@ -8,8 +8,8 @@ class App{
 private:
     fileReader reader;
     Location loc;
-    
+
 public:
     App();
-    void run();
+    void run(string&);
 };

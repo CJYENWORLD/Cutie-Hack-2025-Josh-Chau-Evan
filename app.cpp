@@ -11,12 +11,12 @@ using json = nlohmann::json;
 
 App::App() {}
 
-void App::run() {
+void App::run(string& path) {
     double curPoints = 0.0;
     int goodStreak = 0;
     double multiplier = 1.0;
 
-    std::string path = "drives/street_drive_good3.csv";
+    // std::string path = "drives/street_drive_good3.csv";
     reader.readFile(path);
 
     int speedLimit = -1;
