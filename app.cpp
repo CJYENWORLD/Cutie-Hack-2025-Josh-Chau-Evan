@@ -1,9 +1,11 @@
 #include "app.h"
+#include "Level.h"
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
 #include <sstream>
+#include <cmath>
 #include "json.hpp"
 using json = nlohmann::json;
 
@@ -14,7 +16,7 @@ void App::run() {
     int goodStreak = 0;
     double multiplier = 1.0;
 
-    std::string path = "drives/street_drive_good.csv";
+    std::string path = "drives/street_drive_good3.csv";
     reader.readFile(path);
 
     int speedLimit = -1;
@@ -75,7 +77,7 @@ void App::run() {
                 reasons.push_back("Harsh acceleration/braking");
             }
 
-            if (reasons.empty()) {
+            if (reasons.size() == 0) {
                 status = "Driving rule violation";
             } else if (reasons.size() == 1) {
                 status = reasons[0];
@@ -91,7 +93,6 @@ void App::run() {
             << ", " << status;
 
         currentDriveSummary.push_back(oss.str());
-
         std::cout << currentDriveSummary.back() << "\n-----\n";
     }
 
@@ -101,15 +102,13 @@ void App::run() {
     cd["drive_1"] = currentDriveSummary;
 
     std::ofstream driveFile("current_drive.json");
-    if (!driveFile.is_open()) {
-        std::cerr << "Failed to write current_drive.json\n";
-    } else {
+    if (driveFile.is_open()) {
         driveFile << cd.dump(4);
         driveFile.close();
     }
 
     double totalPoints = 0.0;
-    std::vector<double> drives;
+    std::vector<std::string> drives;
 
     std::ifstream inFile("points.json");
     if (inFile.is_open() && inFile.peek() != std::ifstream::traits_type::eof()) {
@@ -117,26 +116,51 @@ void App::run() {
             json j;
             inFile >> j;
             totalPoints = j.value("totalPoints", 0.0);
-            drives = j.value("drives", std::vector<double>());
+            drives = j.value("drives", std::vector<std::string>());
         } catch (...) {
-            std::cerr << "Failed to parse points.json, starting fresh.\n";
             totalPoints = 0.0;
             drives.clear();
         }
     }
     inFile.close();
 
-    drives.push_back(curPoints);
+    int driveIndex = static_cast<int>(drives.size()) + 1;
+
+    double safePoints = curPoints;
+    if (safePoints < 0) {
+        safePoints = 0;
+    } else {
+        safePoints = std::ceil(safePoints);
+    }
+
+    std::ostringstream entry;
+    entry << "Drive " << driveIndex << ": " << safePoints;
+    drives.push_back(entry.str());
+
+    double newTotalPoints = totalPoints + safePoints;
 
     json j;
-    j["totalPoints"] = totalPoints + curPoints;
+    j["totalPoints"] = newTotalPoints;
     j["drives"] = drives;
 
     std::ofstream outFile("points.json");
-    if (!outFile.is_open()) {
-        std::cerr << "Failed to write points.json\n";
-    } else {
+    if (outFile.is_open()) {
         outFile << j.dump(4);
         outFile.close();
+    }
+
+    Level levelObj;
+    int level = levelObj.getLevelFromPoints(static_cast<int>(newTotalPoints));
+    int nextLevelTotal = levelObj.getTotalPointsNeededForNextLevel(static_cast<int>(newTotalPoints));
+
+    json levelJson;
+    levelJson["level"] = level;
+    levelJson["totalPoints"] = newTotalPoints;
+    levelJson["nextLevelTotalPoints"] = nextLevelTotal;
+
+    std::ofstream levelFile("level.json");
+    if (levelFile.is_open()) {
+        levelFile << levelJson.dump(4);
+        levelFile.close();
     }
 }
