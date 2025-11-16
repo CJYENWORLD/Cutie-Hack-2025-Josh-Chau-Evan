@@ -1,16 +1,20 @@
 #include "app.h"
 #include <iostream>
+#include <fstream>
 #include <string>
+#include "json.hpp"
+using json = nlohmann::json;
+
 
 App::App() {
 }
 
 void App::run() {
-    double points = 0.0;
+    double curPoints = 0.0;
     int goodStreak = 0;
     double multiplier = 1.0;
 
-    std::string path = "drives/street_drive_good.csv";
+    std::string path = "drives/street_drive_good.csv"; 
     reader.readFile(path);
 
     int speedLimit = -1;
@@ -46,12 +50,12 @@ void App::run() {
 
         if (infraction) {
             // bad tick: small penalty and full reset
-            points -= 1.0;
+            curPoints -= 1.0;
             multiplier = 1.0;
             goodStreak = 0;
         } else {
             // good tick: add 1 * multiplier
-            points += 1.0 * multiplier;
+            curPoints += 1.0 * multiplier;
             goodStreak++;
 
             // every 10 good ticks, boost multiplier by +0.5
@@ -61,7 +65,7 @@ void App::run() {
         }
 
         std::cout << "t=" << i
-                  << " points=" << points
+                  << " points=" << curPoints
                   << " mult=" << multiplier
                   << " streak=" << goodStreak
                   << " limit=" << speedLimit
@@ -71,5 +75,42 @@ void App::run() {
         std::cout << "-----" << std::endl;
     }
 
-    std::cout << "Final points: " << points << std::endl;
+    std::cout << "Final points: " << curPoints << std::endl;
+
+    //write to points file
+    double totalPoints = 0.0;
+    std::vector<double> drives;
+
+    std::ifstream inFile("points.json");
+    if (inFile.is_open() && inFile.peek() != std::ifstream::traits_type::eof()) {
+        // File exists and is not empty
+        try {
+            json j;
+            inFile >> j;
+            totalPoints = j.value("totalPoints", 0.0);        // default 0
+            drives = j.value("drives", std::vector<double>()); // default empty
+        } catch (json::parse_error& e) {
+            std::cerr << "Failed to parse points.json, starting fresh.\n";
+            totalPoints = 0.0;
+            drives.clear();
+        }
+    }
+    inFile.close();
+
+    drives.push_back(curPoints);
+
+    json j;
+    j["totalPoints"] = totalPoints + curPoints;
+    j["drives"] = drives;
+
+    std::ofstream outFile("points.json");
+    if (!outFile.is_open()) {
+        std::cerr << "Failed to write points.json\n";
+    }
+    else
+    {
+        outFile << j.dump(4); // pretty-print
+        outFile.close();
+    }
+
 }
