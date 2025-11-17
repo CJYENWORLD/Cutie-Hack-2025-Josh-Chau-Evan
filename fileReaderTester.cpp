@@ -1,4 +1,4 @@
-//Dont use in final product
+//unused tester file for fileReader class
 
 
 #include <iostream>

@@ -70,3 +70,11 @@ double Location::getLongitude() const {
 int Location::getSpeedLimit() const { 
     return speedLimitMPH; 
 }
+
+void Location::setLatitude(double lat) {
+    latitude = lat;
+}
+
+void Location::setLongitude(double lon) {
+    longitude = lon;
+}
